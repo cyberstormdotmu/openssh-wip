@@ -1,4 +1,4 @@
-/* $OpenBSD: cipher.c,v 1.126 2026/02/14 00:18:34 jsg Exp $ */
+/* $OpenBSD: cipher.c,v 1.128 2026/05/31 04:37:56 djm Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -178,6 +178,12 @@ cipher_is_cbc(const struct sshcipher *c)
 }
 
 u_int
+cipher_is_internal(const struct sshcipher *c)
+{
+	return (c->flags & CFLAG_INTERNAL) != 0;
+}
+
+u_int
 cipher_ctx_is_plaintext(struct sshcipher_ctx *cc)
 {
 	return cc->plaintext;
@@ -200,6 +206,7 @@ ciphers_valid(const char *names)
 	const struct sshcipher *c;
 	char *cipher_list, *cp;
 	char *p;
+	int found = 0;
 
 	if (names == NULL || strcmp(names, "") == 0)
 		return 0;
@@ -211,10 +218,11 @@ ciphers_valid(const char *names)
 		if (c == NULL || (c->flags & CFLAG_INTERNAL) != 0) {
 			free(cipher_list);
 			return 0;
-		}
+		} else
+			found = 1;
 	}
 	free(cipher_list);
-	return 1;
+	return found;
 }
 
 const char *
